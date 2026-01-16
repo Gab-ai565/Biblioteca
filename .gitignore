@@ -1,2 +1,14 @@
+# Arquivos de ambiente
 .env
+
+# Banco SQLite
+*.db
+
+# Cache do Python
 __pycache__/
+*.pyc
+
+# Editores
+
+
+# Arquivos temporários do sistema
