@@ -18,6 +18,12 @@ login_manager.login_view = "home"
 
 DATABASE = "biblioteca.db"
 
+
+def get_db_connection():
+    conn = sqlite3.connect('biblioteca.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
 # --- Classe do usuário para Flask-Login ---
 class Usuario(UserMixin):
     def __init__(self, id, usuario, senha):
@@ -27,13 +33,14 @@ class Usuario(UserMixin):
 
 # --- Função para pegar usuário do banco ---
 def get_usuario_por_nome(usuario):
-    conn = sqlite3.connect(DATABASE)
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute("SELECT * FROM usuarios WHERE usuario = ?", (usuario,))
     user = c.fetchone()
     conn.close()
+
     if user:
-        return Usuario(id=user[0], usuario=user[1], senha=user[2])
+        return Usuario(id=user["id"], usuario=user["usuario"], senha=user["senha"])
     return None
 
 def get_usuario_por_id(id):
@@ -55,6 +62,7 @@ def load_user(user_id):
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
+        print(request.form)
         usuario = request.form['usuario']
         senha = request.form['senha']
 
@@ -75,7 +83,7 @@ def home():
 def logout():
     logout_user()
     flash("Você saiu da conta.", "info")
-    return redirect(url_for('login'))
+    return redirect(url_for('home'))
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -100,7 +108,7 @@ def register():
         conn.close()
 
         flash("Conta criada com sucesso! Faça login.", "success")
-        return redirect(url_for('login'))
+        return redirect(url_for('home'))
 
     return render_template('register.html')
 
@@ -108,10 +116,34 @@ def register():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    conn = get_db_connection()
+    livros = conn.execute('SELECT * FROM livros').fetchall()
+    conn.close()
     return render_template(
         'home.html',
-        usuario=current_user.usuario
+        usuario=current_user.usuario,
+        livros=livros
     )
+
+
+@app.route('/cadastrar')
+def cadastrar_form():
+    return render_template('cadastrar.html')
+
+@app.route('/cadastrar', methods=['POST'])
+def cadastrar():
+    titulo = request.form['titulo']
+    autor = request.form['autor']
+    ano = request.form['ano']
+    estado = request.form['estado']
+
+    conn = get_db_connection()
+    conn.execute('INSERT INTO livros (nome, autor, ano, estado) VALUES (?, ?, ?, ?)', (titulo, autor, ano, estado))
+    conn.commit()
+    conn.close()
+
+    return redirect('/')
+
 
 # --- Rodar app ---
 if __name__ == "__main__":

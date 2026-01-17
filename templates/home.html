@@ -9,7 +9,16 @@
 <body>
   <h2>Boas-vindas, {{ usuario }}</h2>
   <div id="estante">
-    <!-- LIVROS SERÃO ADICIONADOS PELO BANCO BIBLIOTECA.DB E TABELA LIVROS -->
+    {% for livro in livros %}
+            <div class="livro">
+                <h3>{{ livro['titulo'] }}</h3>
+                <p>Autor: {{ livro['autor'] }}</p>
+                <p>Ano: {{ livro['ano'] }}</p>
+                <p>Disponivel: {{ livro['estado'] }}</p>
+            </div>
+        {% else %}
+            <p>Nenhum livro cadastrado.</p>
+        {% endfor %}
   </div>
   <footer>
     <i class="bi bi-house-fill"></i>
